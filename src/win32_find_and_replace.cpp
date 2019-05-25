@@ -1,6 +1,127 @@
 #include <stdio.h>
-#include "gs_language.h"
-#include "gs_string.h"
+#include <stdlib.h>
+
+// Pulled from gs_language.h
+
+#if !defined(Assert)
+// NOTE(peter): this writes to address 0 which is always illegal and will cause a crash
+#define Assert(expression) if(!(expression)){ *((int *)0) = 5; }
+#endif
+
+#define InvalidCodePath Assert(0);
+#define STBI_ASSERT(x) Assert(x)
+
+#define internal static
+#define local_persist static
+#define global_variable static
+
+typedef signed char    b8;
+typedef short int      b16;
+typedef int            b32;
+typedef long long int  b64;
+
+typedef unsigned char          u8;
+typedef unsigned short int     u16;
+typedef unsigned int           u32;
+typedef unsigned long long int u64;
+
+typedef signed char   s8;
+typedef short int     s16;
+typedef int           s32;
+typedef long long int s64;
+
+typedef float  r32;
+typedef double r64;
+
+#define GSZeroMemory(mem, size) GSZeroMemory_((u8*)(mem), (size)) 
+static void
+GSZeroMemory_ (u8* Memory, s32 Size)
+{
+    for (int i = 0; i < Size; i++) { Memory[i] = 0; }
+}
+
+#define GSCopyMemory(from, to, size) GSCopyMemory_((u8*)from, (u8*)to, size)
+static void
+GSCopyMemory_ (u8* From, u8* To, s32 Size)
+{
+    for (int i = 0; i < Size; i++) { To[i] = From[i]; }
+}
+
+
+// Pulled from gs_string.h
+
+static bool
+CharArraysEqual (char* A, s32 ALength, char* B, s32 BLength)
+{
+    bool Result = false;
+    if (ALength == BLength)
+    {
+        Result = true;
+        char* AIter = A;
+        char* BIter = B;
+        for (s32 i = 0; i < ALength; i++)
+        {
+            if(*AIter++ != *BIter++)
+            {
+                Result = false;
+                break;
+            }
+        }
+    }
+    return Result;
+}
+
+static s32
+CharArrayLength (char* Array)
+{
+    char* C = Array;
+    s32 Result = 0;
+    while (*C)
+    {
+        *C++;
+        Result++;
+    }
+    return Result;
+}
+
+static void
+CopyCharArray (char* Source, char* Dest, s32 DestLength)
+{
+    char* Src = Source;
+    char* Dst = Dest;
+    s32 i = 0; 
+    while (*Src && i < DestLength)
+    {
+        *Dst++ = *Src++;
+        i++;
+    }
+}
+
+#define FirstIndexOfChar(array, find) IndexOfChar(array, 0, find)
+static s32 
+IndexOfChar (char* Array, s32 After, char Find)
+{
+    s32 Result = -1;
+    
+    s32 Counter = After;
+    char* Iter = Array + After;
+    while (*Iter)
+    {
+        if (*Iter == Find)
+        {
+            Result = Counter;
+            break;
+        }
+        Counter++;
+        *Iter++;
+    }
+    
+    return Result;
+}
+
+//
+//
+//
 
 internal char*
 ReadEntireFileAndNullTerminate (char* Filename)
